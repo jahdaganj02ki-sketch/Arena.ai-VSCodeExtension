@@ -3,6 +3,7 @@ import { Logger } from './utils/logger';
 import { ArenaClient } from './api/arenaClient';
 import { registerArenaAuthenticationProvider } from './auth/arenaAuth';
 import { registerArenaChatParticipant } from './chat/arenaChatParticipant';
+import { ARENA_CHAT_VIEW_ID, registerArenaChatView } from './chat/arenaChatViewProvider';
 import { registerArenaLanguageModelProvider } from './model/arenaModelProvider';
 import { registerArenaFileSync } from './files/fileSync';
 import { registerArenaFileExplorer } from './tree/fileExplorerProvider';
@@ -23,6 +24,19 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   registerArenaChatParticipant(context, arenaClient, authProvider);
+
+  registerArenaChatView(context, arenaClient, authProvider);
+
+  const openChatViewCommand = vscode.commands.registerCommand('arena-ai.openChatView', async () => {
+    await vscode.commands.executeCommand(`${ARENA_CHAT_VIEW_ID}.focus`);
+  });
+
+  const openAgentInBrowserCommand = vscode.commands.registerCommand(
+    'arena-ai.openAgentInBrowser',
+    async () => {
+      await vscode.env.openExternal(vscode.Uri.parse('https://arena.ai/agent'));
+    }
+  );
 
   registerArenaLanguageModelProvider(context, arenaClient, authProvider);
 
@@ -79,6 +93,8 @@ export function activate(context: vscode.ExtensionContext): void {
     signOutCommand,
     syncCommand,
     refreshCommand,
+    openChatViewCommand,
+    openAgentInBrowserCommand,
     arenaClient,
     fileSync,
     fileExplorer

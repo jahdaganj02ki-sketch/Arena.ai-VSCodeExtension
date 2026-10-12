@@ -26,9 +26,11 @@
     "type": "git",
     "url": "https://github.com/arena-ai/vscode-extension.git"
   },
+  "icon": "resources/arena-icon.png",
   "activationEvents": [
     "onChatRequest:@arena",
-    "onLanguageModelChat"
+    "onLanguageModelChat",
+    "onView:arena-ai.chatView"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -102,7 +104,24 @@
         "name": "Arena AI"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "arena-ai",
+          "title": "Arena AI",
+          "icon": "resources/arena-icon.svg"
+        }
+      ]
+    },
     "views": {
+      "arena-ai": [
+        {
+          "id": "arena-ai.chatView",
+          "name": "Arena Chat",
+          "type": "webview",
+          "contextualTitle": "Arena AI Agent"
+        }
+      ],
       "explorer": [
         {
           "id": "arenaFileExplorer",
@@ -127,6 +146,15 @@
       {
         "command": "arena-ai-vscode.openChat",
         "title": "Arena AI: Open Chat"
+      },
+      {
+        "command": "arena-ai.openChatView",
+        "title": "Arena AI: Open Chat",
+        "icon": "resources/arena-icon.svg"
+      },
+      {
+        "command": "arena-ai.openAgentInBrowser",
+        "title": "Arena AI: Open Agent in Browser"
       }
     ],
     "menus": {
@@ -142,6 +170,12 @@
         },
         {
           "command": "arena-ai-vscode.openChat"
+        },
+        {
+          "command": "arena-ai.openChatView"
+        },
+        {
+          "command": "arena-ai.openAgentInBrowser"
         }
       ],
       "view/title": [
@@ -149,11 +183,14 @@
           "command": "arena-ai-vscode.syncFiles",
           "when": "view == arenaFileExplorer",
           "icon": "$(sync)"
+        },
+        {
+          "command": "arena-ai.openAgentInBrowser",
+          "when": "view == arena-ai.chatView",
+          "group": "navigation",
+          "icon": "$(link-external)"
         }
       ]
-    },
-    "icons": {
-      "default": "$(robot)"
     }
   },
   "scripts": {

@@ -18,6 +18,11 @@ export class ArenaChatParticipant {
     this.authProvider = authProvider;
 
     this.chatProvider = vscode.chat.createChatParticipant('arena', this.handleChatRequest.bind(this));
+    this.chatProvider.iconPath = vscode.Uri.joinPath(
+      context.extensionUri,
+      'resources',
+      'arena-icon.svg'
+    );
 
     context.subscriptions.push(this.chatProvider);
   }
