@@ -1,0 +1,17 @@
+**/.gitignore
+**/.gitattributes
+**/*.map
+**/*.ts
+**/.vscode/**
+**/.vscode-test/**
+**/node_modules/**
+**/src/**
+**/test/**
+**/webpack.config.js
+**/tsconfig.json
+**/jest.config.js
+**/eslint.config.js
+**/README.md
+**/package-lock.json
+**/yarn.lock
+**/.prettierrc

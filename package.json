@@ -1,0 +1,189 @@
+{
+  "name": "arena-ai-vscode",
+  "publisher": "arena-ai",
+  "displayName": "Arena AI Agent",
+  "description": "Integrate arena.ai/agent with VS Code - chat, language models, and bidirectional file sync",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Programming Languages",
+    "Data Science"
+  ],
+  "keywords": [
+    "arena.ai",
+    "ai",
+    "agent",
+    "chat",
+    "llm",
+    "code"
+  ],
+  "homepage": "https://arena.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arena-ai/vscode-extension.git"
+  },
+  "activationEvents": [
+    "onChatRequest:@arena",
+    "onLanguageModelChat"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Arena AI Agent",
+      "properties": {
+        "arena-ai-vscode.apiEndpoint": {
+          "type": "string",
+          "default": "https://arena.ai/api",
+          "description": "Arena AI API endpoint URL"
+        },
+        "arena-ai-vscode.oauthClientId": {
+          "type": "string",
+          "default": "",
+          "description": "OAuth client ID for arena.ai authentication"
+        },
+        "arena-ai-vscode.defaultModel": {
+          "type": "string",
+          "default": "arena-default",
+          "description": "Default model to use for chat"
+        },
+        "arena-ai-vscode.fileSyncEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable bidirectional file synchronization"
+        },
+        "arena-ai-vscode.fileSyncIncludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/*"
+          ],
+          "description": "Glob patterns for files to sync with arena.ai"
+        },
+        "arena-ai-vscode.fileSyncExcludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/.git/**",
+            "**/dist/**",
+            "**/out/**",
+            "**/*.bin"
+          ],
+          "description": "Glob patterns for files to exclude from sync"
+        },
+        "arena-ai-vscode.maxFileSize": {
+          "type": "number",
+          "default": 1048576,
+          "description": "Maximum file size for sync (in bytes)"
+        }
+      }
+    },
+    "chat": {
+      "participants": [
+        {
+          "id": "arena",
+          "name": "Arena AI Agent",
+          "description": "Arena AI agent for chat and code assistance",
+          "icon": "$(robot)"
+        }
+      ]
+    },
+    "languageModelChatProviders": [
+      {
+        "vendor": "arena-ai",
+        "name": "Arena AI"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "arenaFileExplorer",
+          "name": "Arena AI Files",
+          "when": "config.arena-ai-vscode.fileSyncEnabled"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "arena-ai-vscode.authenticate",
+        "title": "Arena AI: Authenticate"
+      },
+      {
+        "command": "arena-ai-vscode.openSettings",
+        "title": "Arena AI: Open Settings"
+      },
+      {
+        "command": "arena-ai-vscode.syncFiles",
+        "title": "Arena AI: Sync Files Now"
+      },
+      {
+        "command": "arena-ai-vscode.openChat",
+        "title": "Arena AI: Open Chat"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "arena-ai-vscode.authenticate"
+        },
+        {
+          "command": "arena-ai-vscode.openSettings"
+        },
+        {
+          "command": "arena-ai-vscode.syncFiles"
+        },
+        {
+          "command": "arena-ai-vscode.openChat"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "arena-ai-vscode.syncFiles",
+          "when": "view == arenaFileExplorer",
+          "icon": "$(sync)"
+        }
+      ]
+    },
+    "icons": {
+      "default": "$(robot)"
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "compile:dev": "tsc -p ./ --watch",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "test": "npm run compile && node ./out/test/runTests.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@types/node": "^20.0.0",
+    "@types/jest": "^29.5.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "vsce": "^2.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": [
+      "src/test"
+    ]
+  }
+}
