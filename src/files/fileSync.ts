@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { Logger } from '../utils/logger';
 import { ArenaClient } from '../api/arenaClient';
-import { ArenaAuthenticationProvider } from '../auth\arenaAuth';
+import { ArenaAuthenticationProvider } from '../auth/arenaAuth';
 import { FileSyncItem, SyncStatus } from '../types/arenaTypes';
 
 export class ArenaFileSync {
