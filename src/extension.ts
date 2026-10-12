@@ -10,8 +10,8 @@ import { registerArenaFileExplorer } from './tree/fileExplorerProvider';
 export function activate(context: vscode.ExtensionContext): void {
   Logger.info('Arena AI extension is now active');
 
-  const clientId = process.env ARENA_CLIENT_ID || 'arena-ai-vscode-extension';
-  const clientSecret = process.env ARENA_CLIENT_SECRET;
+  const clientId = process.env.ARENA_CLIENT_ID || 'arena-ai-vscode-extension';
+  const clientSecret = process.env.ARENA_CLIENT_SECRET;
 
   const arenaClient = new ArenaClient();
 
@@ -22,9 +22,9 @@ export function activate(context: vscode.ExtensionContext): void {
     arenaClient
   );
 
-  const chatParticipant = registerArenaChatParticipant(context, arenaClient, authProvider);
+  registerArenaChatParticipant(context, arenaClient, authProvider);
 
-  const modelProvider = registerArenaLanguageModelProvider(context, arenaClient, authProvider);
+  registerArenaLanguageModelProvider(context, arenaClient, authProvider);
 
   const fileSync = registerArenaFileSync(context, arenaClient, authProvider);
 
@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return;
       }
 
-      const session = await authProvider.createSession(['read', 'write']);
+      await authProvider.createSession(['read', 'write']);
       vscode.window.showInformationMessage('Successfully authenticated with Arena AI');
     } catch (error) {
       Logger.error('Authentication failed', error);
