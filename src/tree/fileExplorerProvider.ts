@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ArenaFileSync } from '../files/fileSync';
 import { FileSyncItem, SyncStatus } from '../types/arenaTypes';
 
-export class ArenaFileExplorerProvider implements vscode.TreeProvider<ArenaFileItem> {
+export class ArenaFileExplorerProvider implements vscode.TreeDataProvider<ArenaFileItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<ArenaFileItem | undefined | null>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
@@ -27,6 +27,10 @@ export class ArenaFileExplorerProvider implements vscode.TreeProvider<ArenaFileI
     const items = pendingSync.map((item) => new ArenaFileItem(item));
 
     return Promise.resolve(items);
+  }
+
+  dispose(): void {
+    this._onDidChangeTreeData.dispose();
   }
 }
 
@@ -67,7 +71,7 @@ export function registerArenaFileExplorer(
 ): ArenaFileExplorerProvider {
   const provider = new ArenaFileExplorerProvider(fileSync);
 
-  vscode.window.registerTreeDataProvider('arenaFileExplorer', provider);
+  context.subscriptions.push(vscode.window.registerTreeDataProvider('arenaFileExplorer', provider));
 
   context.subscriptions.push(provider);
 

@@ -9,7 +9,7 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
   readonly onDidChangeSessions = this._onDidChangeSessions.event;
 
   private sessions: Map<string, ArenaSession> = new Map();
-  private client: ArenaClient;
+  private readonly arenaClient: ArenaClient;
 
   constructor(
     private readonly extensionContext: vscode.ExtensionContext,
@@ -17,7 +17,7 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
     private readonly clientSecret: string | undefined,
     private readonly client: ArenaClient
   ) {
-    this.client = client;
+    this.arenaClient = client;
     this.loadExistingSessions();
   }
 
@@ -49,17 +49,21 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
   }
 
   async getSessions(
-    _scopes?: readonly string[]
+    _scopes: readonly string[] | undefined,
+    _options: vscode.AuthenticationProviderSessionOptions
   ): Promise<vscode.AuthenticationSession[]> {
     return Array.from(this.sessions.values()).map((session) => ({
       accessToken: session.accessToken,
       account: session.account,
       scopes: session.scopes,
-      id: session.account.id,
+      id: session.id,
     }));
   }
 
-  async createSession(scopes: readonly string[]): Promise<vscode.AuthenticationSession> {
+  async createSession(
+    scopes: readonly string[],
+    _options: vscode.AuthenticationProviderSessionOptions
+  ): Promise<vscode.AuthenticationSession> {
     return new Promise((resolve, reject) => {
       const state = uuidv4();
       const redirectUri = `${vscode.env.uriScheme}://arena-ai.vscode-extension/auth-callback`;
@@ -84,9 +88,13 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
         }
 
         if (selection === 'Open Browser' || selection === undefined) {
-          vscode.env.open(vscode.Uri.parse(authUrl)).then(
-            () => {
-              Logger.info('Browser opened for authentication');
+          vscode.env.openExternal(vscode.Uri.parse(authUrl)).then(
+            (opened) => {
+              if (opened) {
+                Logger.info('Browser opened for authentication');
+              } else {
+                Logger.warn('Browser open was not accepted');
+              }
             },
             (error) => {
               Logger.error('Failed to open browser', error);
@@ -97,9 +105,6 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
           );
         }
       });
-
-      const disposable = vscode.window.onDidChangeTextDocument(() => {});
-      void disposable;
 
       const checkForCallback = setInterval(async () => {
         const activeEditor = vscode.window.activeTextEditor;
@@ -120,7 +125,7 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
               throw new Error('State mismatch - possible CSRF attack');
             }
 
-            const tokenResponse = await this.client.exchangeCodeForToken(
+            const tokenResponse = await this.arenaClient.exchangeCodeForToken(
               this.clientId,
               this.clientSecret,
               code,
@@ -132,6 +137,7 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
             }
 
             const session: ArenaSession = {
+              id: state,
               accessToken: tokenResponse.data.access_token,
               refreshToken: tokenResponse.data.refresh_token,
               expiresAt: tokenResponse.data.expires_in
@@ -145,7 +151,7 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
             };
 
             this.sessions.set(session.account.id, session);
-            this.client.setAccessToken(session.accessToken);
+            this.arenaClient.setAccessToken(session.accessToken);
             await this.saveSessions();
 
             this._onDidChangeSessions.fire({
@@ -159,7 +165,7 @@ export class ArenaAuthenticationProvider implements vscode.AuthenticationProvide
               accessToken: session.accessToken,
               account: session.account,
               scopes: session.scopes,
-              id: session.account.id,
+              id: session.id,
             });
           } catch (error) {
             Logger.error('Authentication callback error', error);
@@ -200,13 +206,15 @@ export function registerArenaAuthenticationProvider(
   clientId: string,
   clientSecret: string | undefined,
   client: ArenaClient
-): vscode.Disposable {
+): ArenaAuthenticationProvider {
   const provider = new ArenaAuthenticationProvider(context, clientId, clientSecret, client);
 
-  return vscode.authentication.registerAuthenticationProvider(
+  vscode.authentication.registerAuthenticationProvider(
     'arena-ai',
     'Arena AI',
     provider,
     { supportsMultipleAccounts: true }
   );
+
+  return provider;
 }

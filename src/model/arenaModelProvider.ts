@@ -18,9 +18,10 @@ export class ArenaLanguageModelProvider implements vscode.LanguageModelChatProvi
   }
 
   async provideLanguageModelChatResponse(
-    messages: vscode.LanguageModelChatMessage[],
-    options: vscode.LanguageModelChatRequestOptions,
-    progress: vscode.Progress<vscode.LanguageModelChatResponseFragment>,
+    model: vscode.LanguageModelChatInformation,
+    messages: readonly vscode.LanguageModelChatRequestMessage[],
+    options: vscode.ProvideLanguageModelChatResponseOptions,
+    progress: vscode.Progress<vscode.LanguageModelResponsePart>,
     token: vscode.CancellationToken
   ): Promise<void> {
     try {
@@ -32,24 +33,32 @@ export class ArenaLanguageModelProvider implements vscode.LanguageModelChatProvi
       }
 
       const chatMessages: ChatMessage[] = messages.map((msg) => ({
-        role: msg.role === vscode.LanguageModelChatRole.User ? 'user' : 'assistant',
-        content: typeof msg.content === 'string' ? msg.content : msg.content.map((part) => part.text).join(''),
+        role: msg.role === vscode.LanguageModelChatMessageRole.User ? 'user' : 'assistant',
+        content: msg.content
+          .map((part) => {
+            if (part instanceof vscode.LanguageModelTextPart) {
+              return part.value;
+            }
+            return '';
+          })
+          .join(''),
       }));
 
-      const modelId = options.model?.id || 'arena-1';
+      const modelId = model.id || 'arena-1';
       const chatRequest = {
         messages: chatMessages,
         model: modelId,
       };
 
-      const response = await this.arenaClient.chat(chatRequest, token);
+      const response = await this.arenaClient.chat(chatRequest as any, token as any);
 
       if (!response.success || !response.data) {
         throw new Error(response.error?.message || 'Failed to get response from Arena AI');
       }
 
-      const { message } = response.data;
-      progress.report({ content: message.content });
+      const text = response.data.response || response.data.message?.content || 'No output';
+      const part = new vscode.LanguageModelTextPart(text);
+      progress.report(part);
 
       Logger.info('Language model chat request completed');
     } catch (error) {
@@ -58,22 +67,33 @@ export class ArenaLanguageModelProvider implements vscode.LanguageModelChatProvi
     }
   }
 
-  async provideLanguageModelChatInfo(
-    _options: vscode.LanguageModelChatRequestOptions,
+  async provideLanguageModelChatInformation(
+    _options: vscode.PrepareLanguageModelChatModelOptions,
     _token: vscode.CancellationToken
-  ): Promise<vscode.LanguageModelChatInformation> {
-    return {
+  ): Promise<vscode.LanguageModelChatInformation[]> {
+    return [{
       id: 'arena-1',
       name: 'Arena AI Model',
-      vendor: 'arena.ai',
-      description: 'Arena AI language model for VS Code',
+      family: 'arena-ai',
+      version: '1.0',
+      maxInputTokens: 128000,
+      maxOutputTokens: 4096,
       capabilities: {
-        supportsFunctionCalling: true,
-        supportsStructuredOutput: true,
-        supportsVision: true,
-        maxContextTokens: 128000,
+        toolCalling: true,
+        imageInput: true,
       },
-    };
+    }];
+  }
+
+  async provideTokenCount(
+    _model: vscode.LanguageModelChatInformation,
+    text: string | vscode.LanguageModelChatRequestMessage,
+    _token: vscode.CancellationToken
+  ): Promise<number> {
+    const value = typeof text === 'string' ? text : text.content
+      .map((part) => (part instanceof vscode.LanguageModelTextPart ? part.value : ''))
+      .join('');
+    return value.length;
   }
 
   private async getAuthenticatedSession(): Promise<vscode.AuthenticationSession | null> {
@@ -82,7 +102,7 @@ export class ArenaLanguageModelProvider implements vscode.LanguageModelChatProvi
       return null;
     }
 
-    const sessions = await this.authProvider.getSessions();
+    const sessions = await this.authProvider.getSessions(undefined, {});
     if (sessions.length === 0) {
       Logger.warn('No authenticated sessions found');
       return null;
@@ -100,7 +120,7 @@ export function registerArenaLanguageModelProvider(
   context: vscode.ExtensionContext,
   arenaClient: ArenaClient,
   authProvider?: ArenaAuthenticationProvider
-): ArenaLanguageModelProvider {
+): vscode.Disposable {
   const provider = new ArenaLanguageModelProvider(context, arenaClient, authProvider);
 
   return vscode.lm.registerLanguageModelChatProvider('arena-ai', provider);

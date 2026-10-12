@@ -30,7 +30,7 @@
     "onChatRequest:@arena",
     "onLanguageModelChat"
   ],
-  "main": "./dist/extension.js",
+  "main": "./out/extension.js",
   "contributes": {
     "configuration": {
       "title": "Arena AI Agent",
@@ -177,7 +177,8 @@
     "vsce": "^2.0.0"
   },
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "uuid": "^9.0.0"
   },
   "jest": {
     "preset": "ts-jest",

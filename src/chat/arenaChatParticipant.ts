@@ -17,20 +17,7 @@ export class ArenaChatParticipant {
     this.arenaClient = arenaClient;
     this.authProvider = authProvider;
 
-    this.chatProvider = vscode.chat.createChatParticipant(
-      {
-        id: 'arena',
-        name: 'Arena AI',
-        description: 'Arena AI agent for VS Code',
-        icon: vscode.Uri.parse('https://arena.ai/favicon.ico'),
-        isTrusted: true,
-        settings: {
-          models: ['arena-1', 'arena-2'],
-          defaultModel: 'arena-1',
-        },
-      },
-      this.handleChatRequest.bind(this)
-    );
+    this.chatProvider = vscode.chat.createChatParticipant('arena', this.handleChatRequest.bind(this));
 
     context.subscriptions.push(this.chatProvider);
   }
@@ -41,7 +28,7 @@ export class ArenaChatParticipant {
       return null;
     }
 
-    const sessions = await this.authProvider.getSessions();
+    const sessions = await this.authProvider.getSessions(undefined, {});
     if (sessions.length === 0) {
       Logger.warn('No authenticated sessions found');
       return null;
@@ -53,33 +40,20 @@ export class ArenaChatParticipant {
   private async gatherWorkspaceContext(): Promise<WorkspaceContext> {
     const context: WorkspaceContext = {
       files: [],
-      activeEditor: undefined,
-      selection: undefined,
     };
 
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor) {
-      context.activeEditor = {
-        uri: activeEditor.document.uri.toString(),
-        language: activeEditor.document.languageId,
+      context.activeFile = {
+        path: activeEditor.document.uri.fsPath,
         content: activeEditor.document.getText(),
+        selection: {
+          startLine: activeEditor.selection.start.line,
+          endLine: activeEditor.selection.end.line,
+          startColumn: activeEditor.selection.start.character,
+          endColumn: activeEditor.selection.end.character,
+        },
       };
-
-      if (!activeEditor.selection.isEmpty) {
-        context.selection = {
-          text: activeEditor.document.getText(activeEditor.selection),
-          range: {
-            start: {
-              line: activeEditor.selection.start.line,
-              character: activeEditor.selection.start.character,
-            },
-            end: {
-              line: activeEditor.selection.end.line,
-              character: activeEditor.selection.end.character,
-            },
-          },
-        };
-      }
     }
 
     return context;
@@ -112,16 +86,17 @@ export class ArenaChatParticipant {
         },
       ];
 
-      if (workspaceContext.activeEditor) {
+      if (workspaceContext.activeFile) {
         messages.push({
           role: 'system',
-          content: `Active file context: ${workspaceContext.activeEditor.language} file at ${workspaceContext.activeEditor.uri}`,
+          content: `Active file context: ${workspaceContext.activeFile.path}`,
         });
       }
 
+      const modelId = request.model?.id ?? 'arena-1';
       const chatRequest = {
         messages,
-        model: request.model?.id || 'arena-1',
+        model: modelId,
         workspaceContext,
         command: request.command,
       };
@@ -133,12 +108,13 @@ export class ArenaChatParticipant {
         return { metadata: { command: request.command } };
       }
 
-      const { message } = response.data;
-      stream.markdown(message.content);
+      const text = response.data.response || response.data.message?.content || 'No output';
+      stream.markdown(text);
 
-      if (message.files && message.files.length > 0) {
+      const files = response.data.files || response.data.message?.files || [];
+      if (files.length > 0) {
         stream.markdown('\n\n### Generated Files\n');
-        for (const file of message.files) {
+        for (const file of files) {
           stream.markdown(`- \`${file.path}\`\n`);
         }
       }
@@ -146,7 +122,6 @@ export class ArenaChatParticipant {
       return {
         metadata: {
           command: request.command,
-          parentMessageId: request.parentMessageId,
         },
       };
     } catch (error) {

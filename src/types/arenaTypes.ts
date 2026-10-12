@@ -1,6 +1,5 @@
-import * as vscode from 'vscode';
-
 export interface ArenaSession {
+  id: string;
   accessToken: string;
   refreshToken?: string;
   expiresAt?: number;
@@ -17,6 +16,10 @@ export interface ArenaModel {
   description?: string;
   contextLength?: number;
   maxOutputTokens?: number;
+  capabilities?: {
+    toolCalling?: boolean;
+    imageInput?: boolean;
+  };
 }
 
 export interface ArenaApiResponse<T = unknown> {
@@ -34,12 +37,22 @@ export interface ChatMessage {
   files?: string[];
 }
 
+export enum SyncStatus {
+  PENDING = 'pending',
+  SYNCING = 'syncing',
+  SYNCED = 'synced',
+  ERROR = 'error',
+}
+
 export interface FileSyncItem {
   path: string;
-  content: string;
-  encoding?: 'utf-8' | 'base64';
+  uri?: string;
+  type?: 'change' | 'create' | 'delete';
+  status?: SyncStatus;
   lastModified?: number;
-  action: 'create' | 'update' | 'delete';
+  content?: string;
+  encoding?: 'utf-8' | 'base64';
+  action?: 'create' | 'update' | 'delete';
 }
 
 export interface WorkspaceContext {
@@ -62,15 +75,22 @@ export interface WorkspaceContext {
 }
 
 export interface ArenaChatRequest {
-  prompt: string;
+  prompt?: string;
+  messages?: ChatMessage[];
   model?: string;
   context?: WorkspaceContext;
+  workspaceContext?: WorkspaceContext;
   history?: ChatMessage[];
   files?: string[];
+  command?: string;
 }
 
 export interface ArenaChatResponse {
   response: string;
+  message?: {
+    content: string;
+    files?: FileSyncItem[];
+  };
   files?: FileSyncItem[];
   model?: string;
   usage?: {

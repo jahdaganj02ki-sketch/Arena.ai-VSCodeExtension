@@ -32,13 +32,13 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const authenticateCommand = vscode.commands.registerCommand('arena-ai.authenticate', async () => {
     try {
-      const sessions = await authProvider.getSessions();
+      const sessions = await authProvider.getSessions(undefined, {});
       if (sessions.length > 0) {
         vscode.window.showInformationMessage('Already authenticated with Arena AI');
         return;
       }
 
-      await authProvider.createSession(['read', 'write']);
+      await authProvider.createSession(['read', 'write'], {});
       vscode.window.showInformationMessage('Successfully authenticated with Arena AI');
     } catch (error) {
       Logger.error('Authentication failed', error);
@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const signOutCommand = vscode.commands.registerCommand('arena-ai.signOut', async () => {
     try {
-      const sessions = await authProvider.getSessions();
+      const sessions = await authProvider.getSessions(undefined, {});
       for (const session of sessions) {
         await authProvider.removeSession(session.account.id);
       }

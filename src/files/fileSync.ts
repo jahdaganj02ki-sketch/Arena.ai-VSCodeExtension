@@ -61,7 +61,7 @@ export class ArenaFileSync {
     try {
       const stored = await this.context.workspaceState.get('arena.ai.pendingSync');
       if (stored) {
-        const items: FileSyncItem[] = JSON.parse(stored);
+        const items: FileSyncItem[] = JSON.parse(stored as string);
         items.forEach((item) => {
           this.pendingSync.set(item.path, item);
         });
@@ -75,7 +75,7 @@ export class ArenaFileSync {
   private async savePendingSync(): Promise<void> {
     try {
       const items = Array.from(this.pendingSync.values());
-      await this.context.workspaceState.store('arena.ai.pendingSync', JSON.stringify(items));
+      await this.context.workspaceState.update('arena.ai.pendingSync', JSON.stringify(items));
     } catch (error) {
       Logger.error('Failed to save pending sync', error);
     }
@@ -195,7 +195,7 @@ export class ArenaFileSync {
       return null;
     }
 
-    const sessions = await this.authProvider.getSessions();
+    const sessions = await this.authProvider.getSessions(undefined, {});
     return sessions.length > 0 ? sessions[0] : null;
   }
 

@@ -102,8 +102,31 @@ export class ArenaClient {
     return this.request<ArenaModel[]>('GET', `${ARENA_API_DEFAULTS.API_PATH}/models`);
   }
 
-  async chat(request: ArenaChatRequest): Promise<ArenaApiResponse<ArenaChatResponse>> {
+  async chat(request: ArenaChatRequest, _token?: unknown): Promise<ArenaApiResponse<ArenaChatResponse>> {
     return this.request<ArenaChatResponse>('POST', `${ARENA_API_DEFAULTS.API_PATH}/chat`, request);
+  }
+
+  async uploadFile(filePath: string, fileContent: Uint8Array): Promise<ArenaApiResponse<{ uploaded: boolean }>> {
+    return this.request<{ uploaded: boolean }>('POST', `${ARENA_API_DEFAULTS.API_PATH}/files/upload`, {
+      filePath,
+      content: Array.from(fileContent),
+    });
+  }
+
+  async deleteFile(filePath: string): Promise<ArenaApiResponse<{ deleted: boolean }>> {
+    return this.request<{ deleted: boolean }>('DELETE', `${ARENA_API_DEFAULTS.API_PATH}/files`, {
+      filePath,
+    });
+  }
+
+  async downloadFile(filePath: string): Promise<ArenaApiResponse<Uint8Array>> {
+    return this.request<Uint8Array>('POST', `${ARENA_API_DEFAULTS.API_PATH}/files/download`, {
+      filePath,
+    });
+  }
+
+  dispose(): void {
+    // No-op for compatibility with extension lifecycle subscriptions.
   }
 
   async uploadFiles(files: FileSyncItem[]): Promise<ArenaApiResponse<{ uploaded: number }>> {
