@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { Logger } from '../utils/logger';
 import { ArenaFileSync } from '../files/fileSync';
 import { FileSyncItem, SyncStatus } from '../types/arenaTypes';
 

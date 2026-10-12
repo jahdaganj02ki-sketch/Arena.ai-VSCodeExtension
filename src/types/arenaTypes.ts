@@ -19,7 +19,7 @@ export interface ArenaModel {
   maxOutputTokens?: number;
 }
 
-export interface ArenaApiResponse<T = any> {
+export interface ArenaApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {

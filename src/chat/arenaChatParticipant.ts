@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '../utils/logger';
 import { ArenaClient } from '../api/arenaClient';
 import { ArenaAuthenticationProvider } from '../auth/arenaAuth';

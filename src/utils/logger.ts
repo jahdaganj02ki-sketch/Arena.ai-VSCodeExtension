@@ -10,15 +10,15 @@ export class Logger {
     return this.outputChannel;
   }
 
-  static info(message: string, ...args: any[]): void {
+  static info(message: string, ...args: unknown[]): void {
     this.log('INFO', message, args);
   }
 
-  static warn(message: string, ...args: any[]): void {
+  static warn(message: string, ...args: unknown[]): void {
     this.log('WARN', message, args);
   }
 
-  static error(message: string, error?: any): void {
+  static error(message: string, error?: unknown): void {
     const errorMessage = error instanceof Error
       ? error.message
       : error
@@ -27,11 +27,11 @@ export class Logger {
     this.log('ERROR', errorMessage ? `${message}: ${errorMessage}` : message, []);
   }
 
-  static debug(message: string, ...args: any[]): void {
+  static debug(message: string, ...args: unknown[]): void {
     this.log('DEBUG', message, args);
   }
 
-  private static log(level: string, message: string, args: any[]): void {
+  private static log(level: string, message: string, args: unknown[]): void {
     const timestamp = new Date().toISOString();
     const formattedArgs = args.length > 0 ? ` ${JSON.stringify(args)}` : '';
     const logMessage = `[${timestamp}] [${level}] ${message}${formattedArgs}`;

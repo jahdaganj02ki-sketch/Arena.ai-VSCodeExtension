@@ -1,4 +1,3 @@
-import * as vscode from 'vscode';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Logger } from '../utils/logger';
 import {
@@ -51,10 +50,10 @@ export class ArenaClient {
     this.accessToken = undefined;
   }
 
-  private async request<T = any>(
+  private async request<T = unknown>(
     method: string,
     path: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig
   ): Promise<ArenaApiResponse<T>> {
     try {
@@ -69,8 +68,8 @@ export class ArenaClient {
         await this.axiosInstance.request(fullConfig);
 
       return response.data;
-    } catch (error: any) {
-      if (error.response) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
         return {
           success: false,
           error: {
@@ -78,7 +77,7 @@ export class ArenaClient {
             code: error.response.data?.error?.code,
           },
         };
-      } else if (error.request) {
+      } else if (axios.isAxiosError(error) && error.request) {
         return {
           success: false,
           error: {
@@ -87,10 +86,11 @@ export class ArenaClient {
           },
         };
       } else {
+        const message = error instanceof Error ? error.message : 'Unknown error';
         return {
           success: false,
           error: {
-            message: error.message || 'Unknown error',
+            message,
             code: 'UNKNOWN_ERROR',
           },
         };
