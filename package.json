@@ -3,7 +3,7 @@
   "publisher": "arena-ai",
   "displayName": "Arena AI Agent",
   "description": "Integrate arena.ai/agent with VS Code - chat, language models, and bidirectional file sync",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "engines": {
     "vscode": "^1.90.0"
   },
