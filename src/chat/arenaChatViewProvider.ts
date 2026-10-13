@@ -151,7 +151,7 @@ export class ArenaChatViewProvider implements vscode.WebviewViewProvider {
     <button id="openAgent">Im Browser öffnen</button>
     <button id="openChat" class="secondary">@arena Chat öffnen</button>
   </div>
-  <iframe src="${ARENA_AGENT_URL}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="Arena AI Agent"></iframe>
+  <iframe id="agentFrame" src="${ARENA_AGENT_URL}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" title="Arena AI Agent" loading="lazy"></iframe>
   <p class="hint">Falls die Seite nicht eingebettet werden kann (Blockierung durch arena.ai), nutze den Button oben.</p>
   <hr />
   <label for="prompt"><strong>Direkt fragen</strong></label>
@@ -184,6 +184,20 @@ export class ArenaChatViewProvider implements vscode.WebviewViewProvider {
         answerEl.textContent = message.text;
       }
     });
+    // Fallback: wenn arena.ai das Framing blockiert, zeige eine Fehlermeldung
+    const frame = document.getElementById('agentFrame');
+    let loaded = false;
+    frame.addEventListener('load', () => { loaded = true; });
+    setTimeout(() => {
+      if (!loaded) {
+        frame.style.display = 'none';
+        const msg = document.createElement('p');
+        msg.style.fontSize = '12px';
+        msg.style.opacity = '0.85';
+        msg.textContent = '⚠️ arena.ai kann hier nicht direkt eingebettet werden. Nutze den Button „Im Browser öffnen“ oben, um den Agenten zu laden.';
+        frame.parentNode.insertBefore(msg, frame.nextSibling);
+      }
+    }, 6000);
   </script>
 </body>
 </html>`;

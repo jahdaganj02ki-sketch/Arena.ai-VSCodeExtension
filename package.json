@@ -109,7 +109,10 @@
         {
           "id": "arena-ai",
           "title": "Arena AI",
-          "icon": "resources/arena-icon.svg"
+          "icon": {
+            "light": "resources/arena-activitybar-light.svg",
+            "dark": "resources/arena-activitybar-dark.svg"
+          }
         }
       ]
     },
